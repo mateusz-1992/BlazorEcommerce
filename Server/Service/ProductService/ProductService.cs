@@ -10,6 +10,18 @@ namespace BlazorEcommerce.Server.Service.ProductService
             _context = context;
         }
 
+        public async Task<ServiceResponse<List<Product>>> GetFeaturedProducts()
+        {
+            var response = new ServiceResponse<List<Product>>
+            {
+                Data = await _context.Products
+                .Where(p => p.Featured)
+                .Include(p => p.Variants)
+                .ToListAsync()
+            };
+            return response;
+        }
+
         public async Task<ServiceResponse<Product>> GetProductAsync(int productId)
         {
             var response = new ServiceResponse<Product>();
@@ -48,6 +60,76 @@ namespace BlazorEcommerce.Server.Service.ProductService
                 Data = await _context.Products.Include(p => p.Variants).ToListAsync()
             };
             return response;
+        }
+
+        public async Task<ServiceResponse<List<string>>> GetProductSearchSuggestions(string searchText)
+        {
+            var products = await FaindProductsBySearchText(searchText);
+
+            List<string> result = new List<string>();
+
+            foreach (var product in products)
+            {
+                if(product.Title.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+                {
+                    result.Add(product.Title);
+                }
+
+                if(product.Description != null)
+                {
+                    var punctuation = product.Description.Where(char.IsPunctuation)
+                        .Distinct().ToArray();
+                    var words = product.Description.Split()
+                        .Select(s => s.Trim(punctuation));
+
+                    foreach (var word in words)
+                    {
+                        if (word.Contains(searchText, StringComparison.OrdinalIgnoreCase)
+                            && !result.Contains(word))
+                        {
+                            result.Add(word);
+                        }
+                    }
+                }
+            }
+
+            return new ServiceResponse<List<string>> { Data = result };
+        }
+
+        public async Task<ServiceResponse<ProductSearchResultDto>> SearchProduct(string searchText, int page)
+        {
+            var pageResults = 2f;
+            var pageCount = Math.Ceiling((await FaindProductsBySearchText(searchText)).Count / pageResults);
+            var products = await _context.Products
+                                .Where(p => p.Title.ToLower().Contains(searchText.ToLower())
+                               ||
+                               p.Description.ToLower().Contains(searchText.ToLower()))
+                               .Include(p => p.Variants)
+                               .Skip((page - 1) * (int)pageResults)
+                               .Take((int)pageResults)
+                               .ToListAsync();
+
+            var response = new ServiceResponse<ProductSearchResultDto>
+            {
+                Data = new ProductSearchResultDto
+                {
+                    Products = products,
+                    CurrentPage = page,
+                    Pages = (int)pageResults
+                }
+            };
+
+            return response;
+        }
+
+        private async Task<List<Product>> FaindProductsBySearchText(string searchText)
+        {
+            return await _context.Products
+                                .Where(p => p.Title.ToLower().Contains(searchText.ToLower())
+                               ||
+                               p.Description.ToLower().Contains(searchText.ToLower()))
+                               .Include(p => p.Variants)
+                               .ToListAsync();
         }
     }
 }
