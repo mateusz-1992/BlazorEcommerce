@@ -23,8 +23,8 @@ else
                     <span>@product.ProductType</span><br/>
                     <input type="number" value="@product.Quantity"
                     @onchange="@((ChangeEventArgs e ) => UpdateQuentity(e, product))"
-                    calss="form-control input-quantity"
-                    miin="1"/>
+                    class="form-control input-quantity"
+                    min="1"/>
                     <button class="btn-delete" @onclick="@(() =>
                         RemoveProductFromCart(product.ProductId, product.ProductTypeId))">
                         Delete
@@ -56,14 +56,11 @@ else
 
     private async Task LoadCart()
     {
-        if ((await CartSerive.GetCartItem()).Count == 0)
+        await CartSerive.GetCartItemsCount();
+        cartProducts = await CartSerive.GetCartProducts();
+        if (cartProducts == null || cartProducts.Count == 0)
         {
             message = "Your cart is empty";
-            cartProducts = new List<CartProductResponseDto>();
-        }
-        else
-        {
-            cartProducts = await CartSerive.GetCartProducts();
         }
     }
 
