@@ -9,11 +9,11 @@ namespace BlazorEcommerce.Server.Service.PaymentService
         private readonly IAuthService _authService;
         private readonly IOrderService _orderService;
 
-        const string secret = "";
+        const string secret = "keyfromConsole";
 
         public PaymentService(ICartService cartService, IAuthService authService, IOrderService orderService)
         {
-            StripeConfiguration.ApiKey = "";
+            StripeConfiguration.ApiKey = "ApiKeyfromWeb";
 
             _cartService = cartService;
             _authService = authService;
