@@ -1,0 +1,97 @@
+﻿@page "/ResetUserPw2"
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives;
+@layout ShopLayout
+@inject IMailService MailService
+@inject IAuthService AuthService
+@inject ISnackbar Snackbar
+@inject NavigationManager navMgr
+
+
+@if (usTok == null || usEm == null)
+{
+    <MudContainer>
+        <MudCard style="margin-top:60px; width:80%;" Elevation="5" Class="pa-auto ml-auto mr-auto">
+            <MudCardHeader>
+                <MudText Typo="Typo.h5">Reset your Password (step two)</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled">This page can not be called without a valid token and a valid user email address!</MudAlert>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Disabled="true" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudContainer>
+}
+else
+{
+    <EditForm Model="@user" OnValidSubmit="@HandleReset">
+        <DataAnnotationsValidator />
+        <MudCard style="margin-top:60px; width:80%;" Elevation="5" Class="pa-auto ml-auto mr-auto">
+            <MudCardHeader>
+                <MudText Typo="Typo.h5">Reset your Password</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudTextField Label="Email address" Disabled="true" HelperText="Max. 8 characters" @bind-Value="@usEm" For="@(() => user.Email)" />
+                <MudTextField Label="Reset token" Disabled="true" Class="mt-3" HelperText="the token you'vet got by mail'" @bind-Value="@usTok" For="@(() => user.ResetToken)" />
+                <MudTextField Label="New Password" HelperText="Choose a strong password" Class="mt-3" @bind-Value="@user.NewPassword" For="@(() => user.NewPassword)" InputType="InputType.Password" />
+                <MudTextField Label="repeat new Password" HelperText="Repeat the password" Class="mt-3" @bind-Value="@user.ConfirmPassword" For="@(() => user.ConfirmPassword)" InputType="InputType.Password" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Reset Password</MudButton>
+            </MudCardActions>
+        </MudCard>
+
+    </EditForm>
+
+}
+
+
+
+@code {
+    private UserPwResetModel user = new UserPwResetModel();
+    private StringValues tok = String.Empty;
+    private StringValues em = String.Empty;
+    private string? usTok { get; set; }
+    private string? usEm { get; set; }
+    private bool showMsg = false;
+
+    protected override void OnInitialized()
+    {
+        var uri = navMgr.ToAbsoluteUri(navMgr.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("token", out tok))
+        {
+            usTok = Convert.ToString(tok);
+        }
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("um", out em))
+        {
+            usEm = Convert.ToString(em);
+        }
+    }
+
+    async Task HandleReset()
+    {
+        user.ResetToken = usTok;
+        user.Email = usEm;
+        var res = await AuthService.ResetPassword(user);
+        if (!res.Success)
+        {
+            snackMessage(res.Message, Severity.Error, Defaults.Classes.Position.BottomRight);
+        }
+        else
+        {
+            snackMessage(res.Message, Severity.Success, Defaults.Classes.Position.BottomRight);
+            navMgr.NavigateTo("login");
+             
+        }
+    }
+
+    // show a snackbar message
+    private void snackMessage(string message, MudBlazor.Severity type, string position)
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = position;
+        Snackbar.Add(message, type);
+    }
+	}

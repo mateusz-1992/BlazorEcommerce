@@ -147,5 +147,67 @@ namespace BlazorEcommerce.Server.Service.AuthService
         {
             return await _context.Users.FirstOrDefaultAsync(u => u.Email.Equals(email));
         }
+
+        public async Task<ServiceResponse<bool>> ResetPassword(string Email, string NewPassword, string ResetToken)
+        {
+            var res = new ServiceResponse<bool>();
+            if (!await _context.Users.AnyAsync(user => user.Email.ToLower().Equals(Email.ToLower())))
+            {
+                res.Success = false;
+                res.Message = "User with email " + Email + " not found!";
+                return res;
+            }
+            else if(!await _context.Users.AnyAsync(user => user.UserPwResetToken.ToLower().Equals(ResetToken.ToLower())))
+            {
+                res.Success = false;
+                res.Message = "Wrong reset token!";
+                return res;
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == Email);
+            if(user == null)
+            {
+                res.Success = false;
+                res.Message = "User with email " + Email + " not found!";
+                return res;
+            }
+
+            CreatePasswordHash(NewPassword, out byte[] passwordHas, out byte[] passwordSalt);
+            user.PasswordHash = passwordHas;
+            user.PasswordSalt = passwordSalt;
+            user.UserPwResetToken = string.Empty;
+
+            await _context.SaveChangesAsync();
+            res.Success = true;
+            res.Message = "The password has been resetted successfully!";
+            return res;
+        }
+
+        public async Task<ServiceResponse<string>> CreateResetToken(User request)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == request.Email);
+
+            var res = new ServiceResponse<string>();
+            if(user == null)
+            {
+                res.Success = false;
+                res.Message = "No user found with email address" + request.Email;
+                return res;
+            }
+
+            if(!string.IsNullOrEmpty(user.UserPwResetToken))
+            {
+                res.Success = false;
+                res.Message = "There is a open reset request already! Please check your Inbox.";
+                return res;
+            }
+
+            var tok = Guid.NewGuid();
+            user.UserPwResetToken = tok.ToString();
+            await _context.SaveChangesAsync();
+            res.Data = tok.ToString();
+            res.Success = true;
+            return res;
+        }
     }
 }

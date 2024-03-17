@@ -58,5 +58,28 @@ namespace BlazorEcommerce.Server.Controllers
 
             return Ok(response);
         }
+
+        [HttpPost("createResetToken")]
+        public async Task<ActionResult<ServiceResponse<string>>> CreateResetToken(User request)
+        {
+            var response = await _authService.CreateResetToken(request);
+            if(!response.Success)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);    
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<ActionResult<ServiceResponse<bool>>> ResetPassword(UserPwResetModel Reset)
+        {
+            var resp = await _authService.ResetPassword(Reset.Email, Reset.NewPassword, Reset.ResetToken);
+            if(!resp.Success)
+            {
+                return BadRequest(resp);
+            }
+
+            return Ok(resp);
+        }
     }  
 }

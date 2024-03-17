@@ -1,0 +1,72 @@
+﻿@page "/ResetUserPw1"
+@layout ShopLayout
+@inject IAuthService AuthService
+@inject IMailService _mail
+@inject ISnackbar Snackbar
+@inject NavigationManager navMgr
+
+<EditForm Model="@us" OnValidSubmit="@SendMail">
+    <DataAnnotationsValidator />
+    <MudCard style="margin-top:60px; width:80%;" Elevation="5" Class="pa-auto ml-auto mr-auto">
+        <MudCardHeader>
+            <MudText Typo="Typo.h5">Reset your Password (step one)</MudText>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined" NoIcon="true">
+                <MudText Typo="Typo.h6">Password reset explanation</MudText>
+                <MudText>Resetting your password requires two steps!</MudText><br />
+                <MudText><b>Step 1:</b>&nbsp; Use this form to request an email to reset your password. <b>NOTE:</b> you must provide the email address that was used creating your account!</MudText><br />
+                <MudText><b>Step 2:</b>&nbsp; Click on the link in the email you'll receive to reset your password.</MudText>
+            </MudAlert>
+            <br />
+            <MudTextField Label="Email address" HelperText="please use your address you've provided on registration!" @bind-Value="@us.Email" For="@(() => us.Email)" />
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Reset my Password</MudButton>
+        </MudCardActions>
+    </MudCard>
+</EditForm>
+
+@code {
+    private User us = new User();
+    
+
+    private async void SendMail()
+    {
+        var res = await AuthService.CreateResetToken(us);
+        if (res.Success)
+        {
+            SendMail sm = new SendMail();
+            sm.ToEmail = us.Email;
+            sm.Subject = "SecPass Password reset";
+            sm.HTMLBody = "<h5>Hello,</h5>you've requested to reset you password. Please use the following link to reset your passwd: <a href=\"https://localhost:7286/ResetUserPw2/?token=" + res.Data.ToString() + "&um=" + us.Email + "\">Reset Password</a><br><br>";
+            sm.HTMLBody += "If the provided link is not clickable to you, please follow the steps below:<br>";
+            sm.HTMLBody += "<b>1.</b> mark this (https://localhost:7286/ResetUserPw2/?token=" + res.Data.ToString() + "&um=" + us.Email + ") link and copy it to the clipboard<br>";
+            sm.HTMLBody += "<b>2. </b> Paste this link into your browsers url / address field and hit enter to visit the page.";
+            sm.HTMLBody += "<br><br><b><span style=\"color:red;\">If you've not initiated this password change request, please contact your Application Administrator!</b>";
+            var erg = await _mail.SendEmail(sm);
+            if (erg.Success)
+            {
+                snackMessage(erg.Message + "<br>Please look at your inbox!", Severity.Success, Defaults.Classes.Position.BottomRight);
+            }
+            else
+            {
+                snackMessage(erg.Message, Severity.Error, Defaults.Classes.Position.BottomRight);
+            }
+        }
+        else
+        {
+            snackMessage(res.Message, Severity.Error, Defaults.Classes.Position.BottomRight);
+        }
+    }
+
+    // show a snackbar message
+    private void snackMessage(string message, MudBlazor.Severity type, string position)
+    {
+        Snackbar.Clear();
+        Snackbar.Configuration.PositionClass = position;
+        Snackbar.Add(message, type);
+    }
+
+
+	}

@@ -8,11 +8,13 @@ global using BlazorEcommerce.Client.Service.CartService;
 global using BlazorEcommerce.Client.Service.OrderService;
 global using BlazorEcommerce.Client.Service.AddressService;
 global using BlazorEcommerce.Client.Service.ProductTypeService;
+global using BlazorEcommerce.Client.Service.MailService;
 using BlazorEcommerce.Client;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Blazored.LocalStorage;
 using MudBlazor.Services;
+
 
 
 
@@ -32,6 +34,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
+builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();

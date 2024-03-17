@@ -10,8 +10,11 @@ global using BlazorEcommerce.Server.Service.OrderService;
 global using BlazorEcommerce.Server.Service.PaymentService;
 global using BlazorEcommerce.Server.Service.AddressService;
 global using BlazorEcommerce.Server.Service.ProductTypeService;
+global using BlazorEcommerce.Server.Service.EmailService;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.DependencyInjection;
+
 
 
 
@@ -39,6 +42,8 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IProductTypeService, ProductTypeService>();
+builder.Services.AddSingleton(builder.Configuration.GetSection("MailSettings").Get<MailSettings>());
+builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {

@@ -10,11 +10,11 @@ namespace BlazorEcommerce.Shared
     {
         public int Id { get; set; }
         public string Email { get; set; } = string.Empty;
-        public byte[] PasswordHash { get; set; }
-        public byte[] PasswordSalt { get; set; }
-        public string UserPwResetToekn { get; set; } = string.Empty;
+        public byte[]? PasswordHash { get; set; }
+        public byte[]? PasswordSalt { get; set; }
+        public string UserPwResetToken { get; set; } = string.Empty;
         public DateTime DateCreated { get; set; } = DateTime.Now;
-        public Address Address { get; set; }
+        public Address? Address { get; set; }
         public string Role { get; set; } = "Customer";
     }
 }

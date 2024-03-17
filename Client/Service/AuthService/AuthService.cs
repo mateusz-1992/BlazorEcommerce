@@ -18,6 +18,13 @@ namespace BlazorEcommerce.Client.Service.AuthService
             return await result.Content.ReadFromJsonAsync<ServiceResponse<bool>>();
         }
 
+        public async Task<ServiceResponse<string>> CreateResetToken(User request)
+        {
+            var result = await _http.PostAsJsonAsync("api/auth/createResetToken", request);
+            return await result.Content.ReadFromJsonAsync<ServiceResponse<string>>();
+            
+        }
+
         public async Task<bool> IsUserAuthenticated()
         {
             return (await _authStateProvider.GetAuthenticationStateAsync()).User.Identity.IsAuthenticated;
@@ -33,6 +40,13 @@ namespace BlazorEcommerce.Client.Service.AuthService
         {
             var result = await _http.PostAsJsonAsync("api/auth/register", request);
             return await result.Content.ReadFromJsonAsync<ServiceResponse<int>>();
+        }
+
+        public async Task<ServiceResponse<bool>> ResetPassword(UserPwResetModel request)
+        {
+            var result = await _http.PostAsJsonAsync("api/auth/reset-password", request);
+            return await result.Content.ReadFromJsonAsync<ServiceResponse<bool>>();
+            
         }
     }
 }
